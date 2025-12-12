@@ -160,7 +160,12 @@ class DataService:
             return {}
         
         total_revenue = sum(p.revenue for p in periods)
-        total_expenses = sum(p.operating_expenses for p in periods)
+        total_expenses = sum(
+            (p.cost_of_goods_sold or 0)
+            + (p.operating_expenses or 0)
+            + (p.non_operating_expenses or 0)
+            for p in periods
+        )
         total_profit = sum(p.net_profit for p in periods)
         
         return {

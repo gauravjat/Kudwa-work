@@ -199,12 +199,12 @@ DATA INTEGRATION SUCCESS
 ================================================================================
 
 Sources Integrated:
-  1. QuickBooks (data_ser-1.json)
+  1. QuickBooks (data_set_1.json)
      - Format: Hierarchical P&L report
      - Coverage: Jan 2020 - Aug 2025 (68 months)
      - Records loaded: 68
 
-  2. Rootfi (data_set-2.json)
+  2. Rootfi (data_set_2.json)
      - Format: Nested line items
      - Coverage: Aug 2022 - Jul 2025 (35 periods)
      - Records loaded: 35

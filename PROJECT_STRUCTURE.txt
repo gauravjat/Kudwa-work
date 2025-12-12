@@ -30,8 +30,8 @@ kwtreca/
 │           └── ai_service.py          ← AI/LLM integration
 │
 ├── 📊 DATA SOURCES
-│   ├── data_ser-1.json                ← QuickBooks P&L data (68 periods)
-│   └── data_set-2.json                ← Rootfi financial data (35 periods)
+│   ├── data_set_1.json                ← QuickBooks P&L data (68 periods)
+│   └── data_set_2.json                ← Rootfi financial data (35 periods)
 │
 ├── 🔧 SCRIPTS & UTILITIES
 │   ├── load_data.py                   ← Data loading script

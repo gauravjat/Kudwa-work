@@ -1,0 +1,19 @@
+Financial Data Context:
+
+Dataset Overview:
+- Total Periods: {{ total_periods }}
+- Date Range: {{ date_range_start }} to {{ date_range_end }}
+- Total Revenue: ${{ "%.2f"|format(total_revenue) }}
+- Total Expenses: ${{ "%.2f"|format(total_expenses) }}
+- Total Net Profit: ${{ "%.2f"|format(total_profit) }}
+
+{% if recent_periods %}
+Recent Monthly Data (Last {{ recent_periods|length }} months):
+{% for period in recent_periods %}
+- {{ period.period_start }} to {{ period.period_end }}:
+  Revenue: ${{ "%.2f"|format(period.revenue) }}, 
+  Expenses: ${{ "%.2f"|format(period.operating_expenses) }}, 
+  Net Profit: ${{ "%.2f"|format(period.net_profit) }}
+{% endfor %}
+{% endif %}
+

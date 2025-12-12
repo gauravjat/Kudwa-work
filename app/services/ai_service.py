@@ -1,28 +1,48 @@
 """
-AI service for natural language querying and insights generation.
+AI service for natural language querying and insights generation using LangChain.
 """
 import json
 from typing import Dict, Any, List
 from datetime import datetime
-from openai import OpenAI
+
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.services.data_service import DataService
 from app.exceptions import AIServiceError
+from app.models import FinancialPeriod
+from app.prompts.prompt_loader import prompt_loader
 
 
 class AIService:
-    """Service for AI-powered financial data analysis."""
+    """Service for AI-powered financial data analysis using LangChain."""
     
     def __init__(self, db: Session):
         self.db = db
         self.data_service = DataService(db)
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        
+        # Initialize LangChain ChatOpenAI model
+        self.llm = ChatOpenAI(
+            model=settings.OPENAI_MODEL,
+            temperature=0.3,  # Lower temperature for more factual responses
+            openai_api_key=settings.OPENAI_API_KEY,
+            max_tokens=1000
+        )
+        
+        # Initialize insight generation LLM with different settings
+        self.insights_llm = ChatOpenAI(
+            model=settings.OPENAI_MODEL,
+            temperature=0.5,  # Slightly higher for more creative insights
+            openai_api_key=settings.OPENAI_API_KEY,
+            max_tokens=1500
+        )
     
     def query_natural_language(self, question: str, conversation_history: List[Dict] = None) -> Dict[str, Any]:
         """
-        Process natural language query about financial data.
+        Process natural language query about financial data using LangChain.
         
         Args:
             question: User's natural language question
@@ -44,18 +64,16 @@ class AIService:
             # Get relevant financial data
             financial_context = self._prepare_financial_context()
             
-            # Build conversation messages
-            messages = self._build_conversation(question, financial_context, conversation_history)
-            
-            # Call OpenAI API
-            response = self.client.chat.completions.create(
-                model=settings.OPENAI_MODEL,
-                messages=messages,
-                temperature=0.3,  # Lower temperature for more factual responses
-                max_tokens=1000
+            # Build messages for LangChain
+            messages = self._build_langchain_messages(
+                question,
+                financial_context,
+                self._sanitize_history(conversation_history)
             )
             
-            answer = response.choices[0].message.content
+            # Invoke LangChain
+            response = self.llm.invoke(messages)
+            answer = response.content
             
             # Extract relevant data based on question
             supporting_data = self._extract_supporting_data(question)
@@ -71,7 +89,7 @@ class AIService:
     
     def generate_insights(self, period_filter: Dict[str, Any] = None) -> Dict[str, Any]:
         """
-        Generate AI-powered insights from financial data.
+        Generate AI-powered insights from financial data using LangChain.
         
         Args:
             period_filter: Optional filter for specific periods
@@ -83,27 +101,45 @@ class AIService:
         if period_filter:
             start_date = period_filter.get('start_date')
             end_date = period_filter.get('end_date')
+            if not start_date or not end_date:
+                raise AIServiceError("Both start_date and end_date are required when filtering insights")
             periods = self.data_service.get_period_range(start_date, end_date)
         else:
             periods = self.data_service.get_all_periods()
         
+        if not periods:
+            raise AIServiceError("No financial data available to generate insights")
+        
         # Prepare data summary
         data_summary = self._prepare_data_summary(periods)
         
-        # Generate insights using AI
-        prompt = self._build_insights_prompt(data_summary)
+        # Build prompt context for Jinja2 template
+        prompt_context = {
+            'period_count': len(periods),
+            'date_range_start': str(periods[0].period_start),
+            'date_range_end': str(periods[-1].period_end),
+            'total_revenue': data_summary['totals']['revenue'],
+            'total_expenses': data_summary['totals']['expenses'],
+            'total_profit': data_summary['totals']['profit'],
+            'profit_margin': (data_summary['totals']['profit'] / data_summary['totals']['revenue'] * 100) if data_summary['totals']['revenue'] > 0 else 0,
+            'avg_revenue': data_summary['averages']['revenue'],
+            'avg_expenses': data_summary['averages']['expenses'],
+            'avg_profit': data_summary['averages']['profit'],
+            'revenue_trend': data_summary['trends']['revenue_trend'],
+            'profit_trend': data_summary['trends']['profit_trend']
+        }
         
-        response = self.client.chat.completions.create(
-            model=settings.OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": "You are a financial analyst providing clear, actionable insights from financial data."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            max_tokens=1500
-        )
+        # Generate insights using LangChain with Jinja2 prompt
+        system_prompt = prompt_loader.get_system_prompt()
+        insights_prompt = prompt_loader.get_insights_prompt(prompt_context)
         
-        insights = response.choices[0].message.content
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=insights_prompt)
+        ]
+        
+        response = self.insights_llm.invoke(messages)
+        insights = response.content
         
         return {
             'insights': insights,
@@ -113,61 +149,73 @@ class AIService:
         }
     
     def _prepare_financial_context(self) -> str:
-        """Prepare financial data context for AI."""
+        """Prepare financial data context for AI using Jinja2 templates."""
         # Get summary statistics
         stats = self.data_service.get_summary_statistics()
         
         # Get recent periods for context
         recent_periods = self.data_service.get_all_periods()[-12:]  # Last 12 months
         
-        # Format context
-        context_parts = [
-            f"Dataset Overview:",
-            f"- Total Periods: {stats.get('total_periods', 0)}",
-            f"- Date Range: {stats.get('date_range', {}).get('start')} to {stats.get('date_range', {}).get('end')}",
-            f"- Total Revenue: ${stats.get('total_revenue', 0):,.2f}",
-            f"- Total Expenses: ${stats.get('total_expenses', 0):,.2f}",
-            f"- Total Net Profit: ${stats.get('total_profit', 0):,.2f}",
-            f"\nRecent Monthly Data (Last 12 months):"
-        ]
+        # Build context using Jinja2 template
+        context = {
+            'total_periods': stats.get('total_periods', 0),
+            'date_range_start': stats.get('date_range', {}).get('start', 'N/A'),
+            'date_range_end': stats.get('date_range', {}).get('end', 'N/A'),
+            'total_revenue': stats.get('total_revenue', 0),
+            'total_expenses': stats.get('total_expenses', 0),
+            'total_profit': stats.get('total_profit', 0),
+            'recent_periods': recent_periods
+        }
         
-        for period in recent_periods:
-            context_parts.append(
-                f"- {period.period_start} to {period.period_end}: "
-                f"Revenue ${period.revenue:,.2f}, "
-                f"Expenses ${period.operating_expenses:,.2f}, "
-                f"Net Profit ${period.net_profit:,.2f}"
-            )
-        
-        return "\n".join(context_parts)
+        return prompt_loader.get_financial_context(context)
     
-    def _build_conversation(self, question: str, context: str, history: List[Dict] = None) -> List[Dict]:
-        """Build conversation messages for OpenAI API."""
-        system_message = {
-            "role": "system",
-            "content": (
-                "You are a financial data analyst assistant. You answer questions about financial data "
-                "with precision and clarity. Use the provided financial data context to answer questions. "
-                "Always include specific numbers and time periods when relevant. "
-                "If you cannot find the exact answer in the data, say so clearly."
-            )
-        }
-        
-        context_message = {
-            "role": "system",
-            "content": f"Financial Data Context:\n{context}"
-        }
-        
-        messages = [system_message, context_message]
+    def _build_langchain_messages(
+        self, 
+        question: str, 
+        context: str, 
+        history: List[Dict] = None
+    ) -> List:
+        """Build messages for LangChain."""
+        # System message with instructions
+        system_prompt = prompt_loader.get_system_prompt()
+        messages = [
+            SystemMessage(content=system_prompt),
+            SystemMessage(content=context)  # Financial context as system message
+        ]
         
         # Add conversation history if provided
         if history:
-            messages.extend(history)
+            for msg in history:
+                role = msg.get('role')
+                content = msg.get('content')
+                if role == 'user':
+                    messages.append(HumanMessage(content=content))
+                elif role == 'assistant':
+                    messages.append(AIMessage(content=content))
         
         # Add current question
-        messages.append({"role": "user", "content": question})
+        messages.append(HumanMessage(content=question))
         
         return messages
+
+    def _sanitize_history(self, history: List[Dict] | None) -> List[Dict]:
+        """Ensure conversation history is well-formed and safe to forward."""
+        if not history:
+            return []
+        
+        allowed_roles = {"user", "assistant", "system"}
+        sanitized: List[Dict] = []
+        for msg in history:
+            if not isinstance(msg, dict):
+                continue
+            role = msg.get("role")
+            content = msg.get("content")
+            if role not in allowed_roles or not isinstance(content, str):
+                continue
+            sanitized.append({"role": role, "content": content})
+        
+        # Keep recent context only to avoid unbounded growth
+        return sanitized[-10:]
     
     def _extract_supporting_data(self, question: str) -> Dict[str, Any]:
         """Extract relevant supporting data based on question."""
@@ -181,6 +229,10 @@ class AIService:
             supporting_data['periods'] = self._get_quarter_data(1)
         elif 'q2' in question_lower or 'quarter 2' in question_lower or 'second quarter' in question_lower:
             supporting_data['periods'] = self._get_quarter_data(2)
+        elif 'q3' in question_lower or 'quarter 3' in question_lower or 'third quarter' in question_lower:
+            supporting_data['periods'] = self._get_quarter_data(3)
+        elif 'q4' in question_lower or 'quarter 4' in question_lower or 'fourth quarter' in question_lower:
+            supporting_data['periods'] = self._get_quarter_data(4)
         elif '2024' in question_lower:
             supporting_data['periods'] = self._get_year_data('2024')
         elif 'recent' in question_lower or 'latest' in question_lower:
@@ -249,8 +301,8 @@ class AIService:
         total_profit = sum(p.net_profit for p in periods)
         
         # Calculate trends
-        revenue_trend = [p.revenue for p in periods]
-        profit_trend = [p.net_profit for p in periods]
+        revenue_trend = [float(p.revenue) for p in periods]
+        profit_trend = [float(p.net_profit) for p in periods]
         
         return {
             'period_count': len(periods),
@@ -259,47 +311,17 @@ class AIService:
                 'end': str(periods[-1].period_end)
             },
             'totals': {
-                'revenue': total_revenue,
-                'expenses': total_expenses,
-                'profit': total_profit
+                'revenue': float(total_revenue),
+                'expenses': float(total_expenses),
+                'profit': float(total_profit)
             },
             'averages': {
-                'revenue': total_revenue / len(periods),
-                'expenses': total_expenses / len(periods),
-                'profit': total_profit / len(periods)
+                'revenue': float(total_revenue) / len(periods),
+                'expenses': float(total_expenses) / len(periods),
+                'profit': float(total_profit) / len(periods)
             },
             'trends': {
                 'revenue_trend': revenue_trend[-6:],  # Last 6 months
                 'profit_trend': profit_trend[-6:]
             }
         }
-    
-    def _build_insights_prompt(self, data_summary: Dict[str, Any]) -> str:
-        """Build prompt for insight generation."""
-        return f"""
-Analyze the following financial data and provide 3-5 key insights:
-
-Period: {data_summary['date_range']['start']} to {data_summary['date_range']['end']}
-Number of Periods: {data_summary['period_count']}
-
-Financial Summary:
-- Total Revenue: ${data_summary['totals']['revenue']:,.2f}
-- Total Expenses: ${data_summary['totals']['expenses']:,.2f}
-- Total Net Profit: ${data_summary['totals']['profit']:,.2f}
-
-Monthly Averages:
-- Average Revenue: ${data_summary['averages']['revenue']:,.2f}
-- Average Expenses: ${data_summary['averages']['expenses']:,.2f}
-- Average Profit: ${data_summary['averages']['profit']:,.2f}
-
-Recent Trends (Last 6 months):
-- Revenue Trend: {data_summary['trends']['revenue_trend']}
-- Profit Trend: {data_summary['trends']['profit_trend']}
-
-Provide clear, actionable insights about:
-1. Overall financial health
-2. Revenue and profit trends
-3. Expense patterns
-4. Any notable observations or concerns
-"""
-

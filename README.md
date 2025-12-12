@@ -6,8 +6,9 @@ AI-powered financial data integration and analysis API that unifies diverse data
 
 This system integrates financial data from QuickBooks and Rootfi formats, stores it in a unified database, and provides:
 - RESTful API for data access
-- Natural language querying powered by OpenAI
-- AI-generated financial insights and narratives
+- Natural language querying powered by **LangChain** with **OpenAI**
+- AI-generated financial insights and narratives using **Jinja2 templates**
+- Production-ready architecture with maintainable prompt management
 
 ## 🚀 Quick Start
 
@@ -19,7 +20,7 @@ This system integrates financial data from QuickBooks and Rootfi formats, stores
 
 1. **Clone and navigate to the project:**
 ```bash
-cd kwtreca
+cd Kudwa-work
 ```
 
 2. **Install dependencies:**
@@ -150,7 +151,7 @@ Generate AI-powered insights and narratives.
 
 ### Project Structure
 ```
-kwtreca/
+Kudwa-work/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI application
@@ -162,13 +163,19 @@ kwtreca/
 │   ├── parsers/             # Data parsers
 │   │   ├── quickbooks_parser.py
 │   │   └── rootfi_parser.py
+│   ├── prompts/             # ✨ NEW: Jinja2 prompt templates
+│   │   ├── system_prompt.j2
+│   │   ├── financial_context.j2
+│   │   ├── insights_prompt.j2
+│   │   └── prompt_loader.py
 │   └── services/            # Business logic
 │       ├── data_service.py
-│       └── ai_service.py
-├── data_ser-1.json          # QuickBooks data
-├── data_set-2.json          # Rootfi data
+│       └── ai_service.py    # ✨ Updated: Uses LangChain
+├── data_set_1.json          # QuickBooks data
+├── data_set_2.json          # Rootfi data
 ├── load_data.py             # Data loading script
-├── requirements.txt
+├── requirements.txt         # ✨ Updated: Added LangChain
+├── LANGCHAIN_MIGRATION.md   # ✨ NEW: Migration guide
 ├── Makefile
 └── README.md
 ```
@@ -177,7 +184,8 @@ kwtreca/
 - **Framework:** FastAPI (modern, high-performance)
 - **Database:** SQLite (simple, file-based)
 - **ORM:** SQLAlchemy (robust data management)
-- **AI/LLM:** OpenAI GPT-4o-mini (cost-effective, capable)
+- **AI/LLM:** LangChain + OpenAI GPT-4o-mini (cost-effective, flexible)
+- **Prompts:** Jinja2 (template-based prompt management)
 - **Validation:** Pydantic (type-safe schemas)
 
 ### Design Principles
@@ -220,27 +228,41 @@ Navigate to `http://localhost:8000/docs` for interactive API documentation.
 ## 🤖 AI Features
 
 ### Natural Language Querying
-The system uses OpenAI's GPT-4o-mini to:
+The system uses **LangChain** with **OpenAI GPT-4o-mini** to:
 1. Understand natural language questions
 2. Access relevant financial data from the database
 3. Generate clear, accurate responses with specific numbers
 4. Support follow-up questions with conversation context
+5. Maintain conversation history with proper message types
+
+**Architecture Highlights:**
+- **LangChain Integration**: Flexible LLM framework for future extensibility
+- **Jinja2 Templates**: Maintainable prompt management in separate files
+- **Type-Safe Messages**: Uses `SystemMessage`, `HumanMessage`, `AIMessage`
+- **Context Management**: Automatic sanitization and history limiting
 
 ### Insights Generation
 AI analyzes financial data to provide:
 - Overall financial health assessment
 - Revenue and profit trend analysis
-- Expense pattern identification
+- Expense management evaluation
 - Notable observations and recommendations
+- Structured output with clear sections
+
+**Template-Based Approach:**
+All prompts are managed via Jinja2 templates in `app/prompts/`:
+- `system_prompt.j2` - AI assistant instructions
+- `financial_context.j2` - Dynamic data context rendering
+- `insights_prompt.j2` - Comprehensive analysis framework
 
 ## 📊 Data Sources
 
-### QuickBooks Format (data_ser-1.json)
+### QuickBooks Format (data_set_1.json)
 - Hierarchical P&L report structure
 - Monthly columns from Jan 2020 to Aug 2025
 - Detailed account breakdowns
 
-### Rootfi Format (data_set-2.json)
+### Rootfi Format (data_set_2.json)
 - Array of monthly financial records
 - Coverage: Aug 2022 to Jul 2025
 - Nested line items structure
@@ -304,6 +326,7 @@ OPENAI_API_KEY=your_openai_api_key
 - **Quick Start:** See `QUICK_START.md` for 5-minute setup guide
 - **API Examples:** See `EXAMPLES.md` for comprehensive API usage examples
 - **Technical Details:** See `TECHNICAL_REPORT.md` for architecture and design decisions
+- **LangChain Migration:** See `LANGCHAIN_MIGRATION.md` for details on LangChain integration
 
 ## 🧪 Testing
 

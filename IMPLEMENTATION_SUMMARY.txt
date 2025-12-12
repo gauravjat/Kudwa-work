@@ -133,8 +133,8 @@ kwtreca/
 │       ├── data_service.py       Data operations
 │       └── ai_service.py         AI integration
 │
-├── data_ser-1.json               QuickBooks data (68 periods)
-├── data_set-2.json               Rootfi data (35 periods)
+├── data_set_1.json               QuickBooks data (68 periods)
+├── data_set_2.json               Rootfi data (35 periods)
 │
 ├── load_data.py                  Data loading script
 ├── test_system.py                System test script
@@ -243,13 +243,13 @@ Query Examples Supported:
 DATA INTEGRATION
 ================================================================================
 
-QuickBooks Data (data_ser-1.json):
+QuickBooks Data (data_set_1.json):
   - Format: Hierarchical P&L report
   - Coverage: Jan 2020 - Aug 2025 (68 months)
   - Structure: Nested rows with groups
   - Parser: Extracts monthly columns, navigates hierarchy
 
-Rootfi Data (data_set-2.json):
+Rootfi Data (data_set_2.json):
   - Format: Array of monthly records
   - Coverage: Aug 2022 - Jul 2025 (35 periods)
   - Structure: Flat with nested line_items

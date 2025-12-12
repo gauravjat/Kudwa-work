@@ -161,6 +161,8 @@ async def generate_insights(
         
         result = ai_service.generate_insights(period_filter=period_filter)
         return result
+    except AIServiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating insights: {str(e)}")
 

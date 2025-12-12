@@ -1,0 +1,33 @@
+Analyze the following financial data and provide 3-5 key insights that are clear, actionable, and valuable for business decision-making.
+
+Period: {{ date_range_start }} to {{ date_range_end }}
+Number of Periods: {{ period_count }}
+
+Financial Summary:
+- Total Revenue: ${{ "%.2f"|format(total_revenue) }}
+- Total Expenses: ${{ "%.2f"|format(total_expenses) }}
+- Total Net Profit: ${{ "%.2f"|format(total_profit) }}
+- Profit Margin: {{ "%.1f"|format(profit_margin) }}%
+
+Monthly Averages:
+- Average Revenue: ${{ "%.2f"|format(avg_revenue) }}
+- Average Expenses: ${{ "%.2f"|format(avg_expenses) }}
+- Average Profit: ${{ "%.2f"|format(avg_profit) }}
+
+{% if revenue_trend %}
+Recent Revenue Trend (Last 6 months): {{ revenue_trend }}
+{% endif %}
+
+{% if profit_trend %}
+Recent Profit Trend (Last 6 months): {{ profit_trend }}
+{% endif %}
+
+Please provide insights covering:
+1. Overall Financial Health - Is the business performing well? What's the profit margin telling us?
+2. Revenue and Profit Trends - Are revenues growing, stable, or declining? What patterns do you see?
+3. Expense Management - Are expenses under control? Any concerns about the expense-to-revenue ratio?
+4. Key Observations - What stands out in the data? Any notable patterns or concerns?
+5. Recommendations - Based on this data, what should stakeholders focus on?
+
+Format your response with clear sections and bullet points where appropriate. Be concise but thorough.
+

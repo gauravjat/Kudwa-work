@@ -50,8 +50,8 @@
 │           └── ai_service.py         AI/LLM integration ⭐
 │
 ├── 📊 DATA SOURCES
-│   ├── data_ser-1.json               QuickBooks data (68 periods)
-│   └── data_set-2.json               Rootfi data (35 periods)
+│   ├── data_set_1.json               QuickBooks data (68 periods)
+│   └── data_set_2.json               Rootfi data (35 periods)
 │
 ├── 🔧 SCRIPTS
 │   ├── load_data.py                  Load data into database

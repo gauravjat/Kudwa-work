@@ -1,0 +1,210 @@
+{
+  "info": {
+    "_postman_id": "e5c6f06b-22c0-4c4d-8b33-d6a3b79e0f2e",
+    "name": "Kudwa Financial API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the Financial Data Processing System."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Root Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "Load Data",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/data/load",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "data",
+            "load"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Periods",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/data/periods?source=quickbooks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "data",
+            "periods"
+          ],
+          "query": [
+            {
+              "key": "source",
+              "value": "quickbooks",
+              "description": "Optional: quickbooks or rootfi"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Period Range",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/data/periods/range?start_date=2024-01-01&end_date=2024-03-31&source=quickbooks",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "data",
+            "periods",
+            "range"
+          ],
+          "query": [
+            {
+              "key": "start_date",
+              "value": "2024-01-01",
+              "description": "YYYY-MM-DD"
+            },
+            {
+              "key": "end_date",
+              "value": "2024-03-31",
+              "description": "YYYY-MM-DD"
+            },
+            {
+              "key": "source",
+              "value": "quickbooks",
+              "description": "Optional: quickbooks or rootfi"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/data/summary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "data",
+            "summary"
+          ]
+        }
+      }
+    },
+    {
+      "name": "AI Query",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question\": \"What was the total profit in Q1 2024?\",\n  \"conversation_history\": []\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/ai/query",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "ai",
+            "query"
+          ]
+        }
+      }
+    },
+    {
+      "name": "AI Insights",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"start_date\": \"2024-01-01\",\n  \"end_date\": \"2024-12-31\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/ai/insights",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "ai",
+            "insights"
+          ]
+        }
+      }
+    }
+  ]
+}
+
