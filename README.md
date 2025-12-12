@@ -603,13 +603,15 @@ Kudwa-work/
 │   └── services/               # Business logic
 │       ├── data_service.py
 │       └── ai_service.py       # LangChain integration
-├── data_set_1.json             # QuickBooks data
-├── data_set_2.json             # Rootfi data
+├── data/                       # Financial datasets
+│   ├── data_set_1.json         # QuickBooks data
+│   └── data_set_2.json         # Rootfi data
 ├── load_data.py                # Data loading script
 ├── test_langchain.py           # Test script
 ├── requirements.txt            # Dependencies
 ├── Dockerfile                  # Docker image
 ├── docker-compose.yml          # Docker compose config
+├── .gitignore                  # Git ignore rules
 ├── Makefile                    # Common commands
 └── README.md                   # This file
 ```
@@ -723,12 +725,12 @@ docker compose up -d
 
 ## 📊 Data Sources
 
-### QuickBooks Format (`data_set_1.json`)
+### QuickBooks Format (`data/data_set_1.json`)
 - Hierarchical P&L report structure
 - Monthly columns from Jan 2020 to Aug 2025
 - Detailed account breakdowns
 
-### Rootfi Format (`data_set_2.json`)
+### Rootfi Format (`data/data_set_2.json`)
 - Array of monthly financial records
 - Coverage: Aug 2022 to Jul 2025
 - Nested line items structure

@@ -17,8 +17,8 @@ class Settings:
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")  # Cost-effective model
     
     # Data files
-    QUICKBOOKS_DATA_FILE = "data_set_1.json"
-    ROOTFI_DATA_FILE = "data_set_2.json"
+    QUICKBOOKS_DATA_FILE = "data/data_set_1.json"
+    ROOTFI_DATA_FILE = "data/data_set_2.json"
 
 settings = Settings()
 
