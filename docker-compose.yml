@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     build: .
@@ -7,8 +5,7 @@ services:
       - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    volumes:
-      - ./financial_data.db:/app/financial_data.db
+      - OPENAI_MODEL=gpt-4o-mini
     restart: unless-stopped
 
 
